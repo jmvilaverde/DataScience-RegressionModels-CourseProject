@@ -21,6 +21,8 @@ anova(fit2) #anova reveals variance relation between values
 #Relevant columns: mpg, am
 #[, 9]         am	 Transmission (0 = automatic, 1 = manual)
 
+####http://www.jerrydallal.com/lhsp/reginter.htm
+
 #Try to identify necessary fields
 #Adding 1 value
 comparative <- function(model, exception){
