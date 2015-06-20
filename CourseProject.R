@@ -7,6 +7,19 @@ init <- function(){
         
         ?mtcars
         
+#         [, 1]  mpg	 Miles/(US) gallon
+#         [, 2]	 cyl	 Number of cylinders
+#         [, 3]	 disp	 Displacement (cu.in.)
+#         [, 4]	 hp	 Gross horsepower
+#         [, 5]	 drat	 Rear axle ratio
+#         [, 6]	 wt	 Weight (lb/1000)
+#         [, 7]	 qsec	 1/4 mile time
+#         [, 8]	 vs	 V/S
+#         [, 9]	 am	 Transmission (0 = automatic, 1 = manual)
+#         [,10]	 gear	 Number of forward gears
+#         [,11]	 carb	 Number of carburetors
+        
+        
         #Show colnames of mtcars
         names(mtcars)
         
@@ -29,6 +42,11 @@ init <- function(){
         summary(model)$coef[1,1]
         summary(model)$coef[1,1]+summary(model)$coef[2,1]
         
+        print("The mean of mpg is higher in vehicles with manual transmission")
+        summary(model)$coef        
+
+        
+
         summary(model)
         
         

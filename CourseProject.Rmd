@@ -50,7 +50,132 @@ Automatic/Manual transmission is better...
 
 
 #### Data adquisition
-1. Data a
+
+##### 1. Data adquisition and Initial structure analysis
+
+##### 1.1. Variables
+
+```{r dataAdquisition, echo=TRUE}
+data(mtcars)
+        
+#?mtcars
+
+#Show colnames of mtcars
+names(mtcars)
+```
+
+**mtcars**
+
+Format: _A data frame with 32 observations on 11 variables._
+
+Variable| Units
+------- | -----------
+**mpg** | **Miles/(US) gallon**
+cyl     | Number of cylinders
+disp    | Displacement (cu.in.)
+hp      | Gross horsepower
+drat    | Rear axle ratio
+wt      | Weight (lb/1000)
+qsec    | 1/4 mile time
+vs      | V/S
+**am**  | **Transmission (0 = automatic, 1 = manual)**
+gear    | Number of forward gears
+carb    | Number of carburetors
+
+```{r structureMtcars, echo=TRUE}
+#Show structure of mtcars
+str(mtcars)
+```
+
+
+##### 2.Initial analysis
+Selected variables: 
+
+* Predictor:    X = am,  Transmission with values 0 for automatic, 1 for manual.
+* Outcome:      Y = mpg, Miles/(US) gallon
+
+Linear regression model formula:
+
+* Y = ${\beta}_0 + {\beta}_1X$ -> mpg = ${\beta}_0 + {\beta}_1am$
+
+Create initial model:
+
+Calculate $\beta_0$ (Intercept): $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$
+
+Calculate $\beta_1$ (Slope): $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$
+
+Fitting the best line:
+
+* $\Sigma_{n}^{i=1}{(Y_i-(\beta_0+\beta_1X_i))}^2$ to minimize the distance.
+
+```{r teoreticalFormula, echo=TRUE}
+#Theoretical formula
+y <- mtcars$mpg
+x <- mtcars$am
+beta1 <- cor(y,x)*(sd(y)/sd(x))
+beta0 <- mean(y) - beta1 * mean(x)
+#R function
+model.Initial <- lm(y ~ x)
+coeffs <- coef(model.Initial)
+
+#Comparation
+rbind(c(beta0, beta1), coeffs)
+```
+
+For linear model $Y=\beta_0+\beta_1X$ -> $mpg=\beta_0+\beta_1am$
+
+* Intercept $\beta_0=$ `r beta0`
+* Slope $\beta_1=$ `r beta1`
+
+> For this linear regression model, the expected difference in MPG is `r beta1` when the car have manual transmission in comparation to the same car with automatic transmission.
+The Intercept `r beta0` is the expected MPG of a automatic transmission car.
+
+```{r plotModelInitial, echo=TRUE}
+color <- ifelse(x==0,"red","blue")
+plot(x,y,col=color,xlab="x=am",ylab="y=mpg")
+legend("top",c("Automatic","Manual"),col=c("red","blue"),pch=1)
+abline(model.Initial)
+```
+
+_View Figure 1 for plot with regression line._
+
+###Normalizing data????
+
+##### 3.Basic regression model with additive Gaussian errors.
+
+Into point 2 is obtained a linear regression model that fits the data, but doesn't take in consideration the impact of the others variables. We are going to analyze gaussian errors for Initial Model.
+
+Selected variables: 
+
+* **Predictor**:    X = am,  Transmission with values 0 for automatic, 1 for manual.
+* **Outcome**:      Y = mpg, Miles/(US) gallon
+
+Probabilistic model for linear regression:
+
+* $Y_i={\beta}_0+{\beta}_1X_i+\epsilon_i$ -> $mpg_i={\beta}_0+{\beta}_1am_i+\epsilon_i$
+* $\epsilon_i$ are assumed iid $N(\mu_i,\delta^2)$. 
+* Note, $E[Y_i|X_i=x_i]=\mu_i=\beta_0+\beta_1x_i$ and $Var(Y_i|X_i=x_i)=\delta^2$.
+* $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$ and $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$.
+
+Residuals analysis:
+
+* Observed outcome i is $Y_i$ at a predictor value $X_i$.
+* Predicted outcome i is $\hat{Y}_i$ at a predictor value $X_i$ is $\hat{Y}_i=\hat{\beta}_0+\hat{\beta}_1X_i$.
+* Residual is the difference between observed an predicted: $e_i=Y_i-\hat{Y}$, the vertical distance between the observed data point and the regression line.
+* Least squares minimizes $\Sigma_{i=1}^ne_i^2$.
+* $e_i$ can be thought of as estimates of the $\epsilon_i$.
+```{r residualsModelInitial, echo=TRUE}
+#Calculate residuals
+e.ModelInitial <- y-(beta0+beta1*x)
+e.ModelInitial
+#R function for residuals
+resid(model.Initial)
+
+#Calculate predicted y (mpg)
+yhat <- predict(model.Initial)
+#Calculate max difference between residual and observed Y - predicted Y (y hat)
+max(abs(e.ModelInitial -(y - yhat)))
+```
 
 ###“Is an automatic or manual transmission better for MPG”
 
