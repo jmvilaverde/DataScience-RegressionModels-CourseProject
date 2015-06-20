@@ -153,8 +153,8 @@ Selected variables:
 Probabilistic model for linear regression:
 
 * $Y_i={\beta}_0+{\beta}_1X_i+\epsilon_i$ -> $mpg_i={\beta}_0+{\beta}_1am_i+\epsilon_i$
-* $\epsilon_i$ are assumed iid $N(\mu_i,\delta^2)$. 
-* Note, $E[Y_i|X_i=x_i]=\mu_i=\beta_0+\beta_1x_i$ and $Var(Y_i|X_i=x_i)=\delta^2$.
+* $\epsilon_i$ are assumed iid $N(\mu_i,\sigma^2)$. 
+* Note, $E[Y_i|X_i=x_i]=\mu_i=\beta_0+\beta_1x_i$ and $Var(Y_i|X_i=x_i)=\sigma^2$.
 * $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$ and $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$.
 
 Residuals analysis:
@@ -177,10 +177,117 @@ yhat <- predict(model.Initial)
 max(abs(e.ModelInitial -(y - yhat)))
 ```
 
+Plot of residuals:
+```{r plotResidual, echo=TRUE}
+plot(x, resid(model.Initial))
+abline(h=0)
+```
+
+
+Formula to estimate residual variation: 
+
+* ML estimate of $\sigma^2$ is $\frac{1}{n}\Sigma^n_{i=1}e^2_i$
+* For $E[\hat\sigma^2]=\sigma^2$ most people use $\frac{1}{n-2}\Sigma^n_{i=1}e^2_i$
+
+```{r residualVariationModelInitial, echo=TRUE}
+#Calculate variation
+n <- length(y)
+var.e.Model.Initial <- sqrt((1/(n-2))*sum((e.ModelInitial^2)))
+var.e.Model.Initial
+#R function to calculate residual variation
+summary(model.Initial)$sigma
+```
+
+Model Initial has a residual variation of `r var.e.Model.Initial`.
+
+#### Total variation.
+
+Formula Total variation = Residual variation + Regression Variation:
+
+* $\Sigma^n_{i=1}(Y_i-\bar{Y})^2=\Sigma^n_{i=1}(Y_i-\hat{Y}_i)^2+\Sigma^n_{i=1}(\hat{Y}_i-\bar{Y})^2$
+
+Define the percent of total variation described by the model as:
+
+* $R^2=\frac{\Sigma^n_{i=1}(\hat{Y}_i-\bar{Y})^2}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}=1-\frac{\Sigma^n_{i=1}(Y_i-\hat{Y}_i)^2}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}$
+
+Relation between $R^2$ and r (the correlation):
+
+Recall that: $(\hat{Y}_i-\bar{Y})=\hat\beta_1(X_i-\bar{X})$ so that
+
+* $R^2=\frac{\Sigma^n_{i=1}(\hat{Y}_i-\bar{Y})^2}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}=\hat\beta^2_1\frac{\Sigma^n_{i=1}(X_i-\bar{X})}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}=Cor(Y,X)^2$
+
+
+```{r rModelInitial, echo=TRUE}
+#Calculate R2
+R2.Model.Initial <- sum((yhat - mean(y))^2)/sum((y-mean(y))^2)
+R2.Model.Initial
+#R function for R2
+cor(y,x)^2
+```
+
+Inference in regression
+
+Create confidence intervals and perform hypothesis tests.
+
+```{r confIntervalsModelInitial,echo=TRUE}
+#Calculation of coefficients
+sigma <- var.e.Model.Initial
+ssx <- sum((x - mean(x))^2)
+seBeta0 <- (1/n + mean(x)^2/ssx) ^ 0.5 * sigma
+seBeta1 <- sigma / sqrt(ssx)
+tBeta0 <- beta0 / seBeta0
+tBeta1 <- beta1 / seBeta1
+pBeta0 <- 2 * pt(abs(tBeta0), df=n-2, lower.tail=FALSE)
+pBeta1 <- 2 * pt(abs(tBeta1), df=n-2, lower.tail=FALSE)
+coefTable <- rbind(c(beta0, seBeta0, tBeta0, pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
+colnames(coefTable) <- c("Estimate","Std.Error", "t value", "P(>|t|)")
+rownames(coefTable) <- c("(Intercept)", "x")
+coefTable
+
+#R function for calculate coefficients
+summary(model.Initial)$coef
+```
+
+Getting a confidence interval
+```{r confidenceIntervalModelInitial, echo=TRUE}
+sumCoef <- summary(model.Initial)$coef
+confInterval.Model.Initial <- sumCoef[1,1] + c(-1,1) * qt(0.975, df=model.Initial$df) * sumCoef[1,2]
+confInterval.Model.Initial
+```
+
+With 95% confidence, we estimate that a conversion from automatic transmission to manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG for the Initial Model.
+
+##Final Analysis for Model Initial
+
+_This analysis doesn't take in consideration other variables that MUST be evaluated due the influence on relation between MPG and the type of transmission AM. Is required a Multivariable regression model._
+
+### Is an automatic or manual transmission better for MPG?
+
+> The manual transmission is better for MPG.
+
+### Quantify the MPG difference between automatic and manual transmissions.
+
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
+
+> * Predictor:    X = am,  Transmission with values 0 for automatic, 1 for manual.
+> * Outcome:      Y = mpg, Miles/(US) gallon
+
+> Linear regression model formula: Y = ${\beta}_0 + {\beta}_1X$ -> mpg = ${\beta}_0 + {\beta}_1am$
+
+### Use of other models
+
+This model lacks of ?precission?. is required to use aditional variables from the original dataset.
+
+For this, is needed the use of multivariable regression analyses.
+
+
+
 ###“Is an automatic or manual transmission better for MPG”
 
+***
+
+# Muliiable regression models
 
 
-###
 
 ##Main Body + Apendix only figures (not more than 5)
