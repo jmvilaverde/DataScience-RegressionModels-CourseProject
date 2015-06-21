@@ -5,113 +5,125 @@ date: "Thursday, June 18, 2015"
 output: pdf_document
 ---
 
-###Executive summary (First paragraph)
+## Executive summary (First paragraph)
 
-For all models evaluated that have a P-value Manual transmission is better for MPG...
+For all models evaluated that have a P-value < 0.05 Manual transmission is better for MPG...
 
+***
 
-#### Data adquisition
+## 1.Initial Exploratory Data Analysis
 
-##### 1. Data adquisition and Initial structure analysis
-
-##### 1.1. Variables
-
-
-```{r dataAdquisition, echo=TRUE}
+```{r dataAdquisition, echo=FALSE}
 data(mtcars)
-
-#Show colnames of mtcars
-names(mtcars)
 ```
 
-**?mtcars**
+### **Structure from ?mtcars and values for factors**
 
 Format: _A data frame with 32 observations on 11 variables._
 
-Variable| Units                                         | Values
-------- | --------------------------------------------- | ---------------------------
-**mpg** | **Miles/(US) gallon**                         |
-cyl     | Number of cylinders (4,6,8)                   | `r unique(mtcars$cyl)[order(unique(mtcars$cyl))]`
-disp    | Displacement (cu.in.)                         |
-hp      | Gross horsepower                              |
-drat    | Rear axle ratio                               |
-wt      | Weight (lb/1000)                              |
-qsec    | 1/4 mile time                                 |
-vs      | V/S -> V motor or straight motor              | `r unique(mtcars$vs)[order(unique(mtcars$vs))]`
-**am**  | **Transmission (0 = automatic, 1 = manual)**  | `r unique(mtcars$am)[order(unique(mtcars$am))]`
-gear    | Number of forward gears                       | `r unique(mtcars$gear)[order(unique(mtcars$gear))]`
-carb    | Number of carburetors                         | `r unique(mtcars$carb)[order(unique(mtcars$carb))]`
+Variables | Units                                         | Values
+--------- | --------------------------------------------- | ---------------------------
+**mpg**   | **Miles/(US) gallon**                         |
+cyl       | Number of cylinders (4,6,8)                   | `r unique(mtcars$cyl)[order(unique(mtcars$cyl))]`
+disp      | Displacement (cu.in.)                         |
+hp        | Gross horsepower                              |
+drat      | Rear axle ratio                               |
+wt        | Weight (lb/1000)                              |
+qsec      | 1/4 mile time                                 |
+vs        | V/S -> V motor or straight motor              | `r unique(mtcars$vs)[order(unique(mtcars$vs))]`
+**am**    | **Transmission (0 = automatic, 1 = manual)**  | `r unique(mtcars$am)[order(unique(mtcars$am))]`
+gear      | Number of forward gears                       | `r unique(mtcars$gear)[order(unique(mtcars$gear))]`
+carb      | Number of carburetors                         | `r unique(mtcars$carb)[order(unique(mtcars$carb))]`
 
-```{r structureMtcars, echo=TRUE}
-#Show structure of mtcars
-str(mtcars)
-```
+Correlation between mpg and am is `r cor(mtcars$mpg, mtcars$am)`. (Closer to -1 or 1 is stronger relationship, when is 0 implies no linear relationship).
 
+### 2.Model proposal and analysis
 
-### 2.Initial analysis
+#### First comparation, model with one predictor vs. multivariable
 
-#### One predictor
+Linear regression model formula: 
 
-Selected variables: 
-
-* Predictor:    X = am,  Transmission with values 0 for automatic, 1 for manual.
-* Outcome:      Y = mpg, Miles/(US) gallon
-
-Linear regression model formula: Y = ${\beta}_0 + {\beta}_1X$ -> mpg = ${\beta}_0 + {\beta}_1am$
-
-Create initial model:
-
-* Calculate $\beta_0$ (Intercept): $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$
-* Calculate $\beta_1$ (Slope): $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$
-
-Fitting the best line: $\Sigma_{n}^{i=1}{(Y_i-(\beta_0+\beta_1X_i))}^2$ to minimize the distance.
-
-```{r teoreticalFormula, echo=TRUE}
-#Theoretical formula
-y <- mtcars$mpg
-x <- mtcars$am
-beta1 <- cor(y,x)*(sd(y)/sd(x))
-beta0 <- mean(y) - beta1 * mean(x)
-
-#R function
-model.Initial <- lm(mpg ~ am, data=mtcars)
-coeffs <- coef(model.Initial)
-summary(model.Initial)
-#Comparation
-rbind(c(beta0, beta1), coeffs)
-```
-
-For linear model $Y=\beta_0+\beta_1X$ -> $mpg=\beta_0+\beta_1am$
-
-* Intercept $\beta_0=$ `r beta0`
-* Slope $\beta_1=$ `r beta1`
-
-> With this linear model we have a P-value under 0.05 on Intercept and all the coefficents and overall model.
-> $R^2$ is 0.3598 for the model, this low value indicates that the model is not a good fit to the data.
-
-> For this linear regression model, the expected difference in MPG is `r beta1` when the car have manual transmission in comparation to the same car with automatic transmission.
-The Intercept `r beta0` is the expected MPG of a automatic transmission car.
-
-#### Multiple predictor
+One predictor | $Y_i={\beta}_0+{\beta}_1X_i$                 | Model Initial
+------------- | -------------------------------------------- | ---------------
+Multivariable | $Y_i=\Sigma^p_{k=1}X_{ik}\beta_j+\epsilon_i$ | Model Complete
 
 In multivariable regression analysis you must evaluate the consecuences to throwing variables that aren't related to the outcome and consecuences to omitting variables that are related to the outcome.
 
+##### Analysis of Model Initial: 
+
+$mpg_i={\beta}_0+\beta_{am}am_i$
+
+_View Figure C1.Summary Detail Model Initial._
+```{r modelInitial, echo=FALSE}
+model.Initial <- lm(mpg ~ am, data=mtcars)
+summary(model.Initial)
+coeff.Model.Initial <- coef(model.Initial)
+pvalue.model.Initial <- as.character(anova(model.Initial)$'Pr(>F)'[1])
+pvalues.coff.model.Initial <- as.character(summary(model.Initial)$coefficients[,4])
+r.model.Initial <- summary(model.Initial)$r.squared
+```
+
+* Intercept and coefficients estimated: `r coeff.Model.Initial`
+* P-value intercept and coefficients:  `r pvalues.coff.model.Initial` < 0.05 are good p-value for the model.
+* p-value Model: `r pvalue.model.Initial`. < 0.05 is a good p-value for the model.
+* $R^2$: `r r.model.Initial`. **This low value indicates that model Initial is not a good fit for the data.**
+
+##### Analysis of model Complete:
+
+$mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}drat+\beta_{wt}wt+\beta_{qsec}qsec+\beta_{vs}vs+\beta_{am}am+\beta_{gear}gear+\beta_{carb}car$
+
+_View Figure C1.Summary Detail Model Initial._
+```{r modelComplete, echo=FALSE}
+model.Complete <- lm(mpg ~ ., data=mtcars)
+summary(model.Complete)
+coeff.Model.Complete <- coef(model.Complete)
+pvalue.model.Complete <- as.character(anova(model.Complete)$'Pr(>F)'[1])
+pvalues.coff.model.Complete <- as.character(summary(model.Complete)$coefficients[,4])
+r.model.Complete <- summary(model.Complete)$r.squared
+```
+
+* Intercept and coefficients estimated: `r coeff.Model.Complete`
+* P-value intercept and coefficients:  `r pvalues.coff.model.Complete` > 0.05 are bad p-value for the model.
+* p-value Model: `r pvalue.model.Complete`. < 0.05 is a good p-value for the model.
+* R^2: `r r.model.Complete`. This high value indicates that the model Complete is a good fit to the data.
+
+**The p-value for intercept and coefficients indicates that model Complete is not a good model for the data.**
+
+Find a better model using step function:
+
+```{r modelStep, echo=FALSE}
+step.result <- as.character(step(model.Complete, trace=FALSE)$call)
+model.Step <- lm(mpg ~ wt + qsec + am, data=mtcars)
+summary(model.Step)
+coeff.Model.Step <- coef(model.Step)
+pvalue.model.Step <- as.character(anova(model.Step)$'Pr(>F)'[1])
+pvalues.coff.model.Step <- as.character(summary(model.Step)$coefficients[,4])
+r.model.Step <- summary(model.Step)$r.squared
+```
+
+* step(lm(mpg ~ ., data=mtcars)): `r step.result`
+
+Step model: $mpg =\beta_{prop.wt}wt+\beta_{prop.qsec}qsec+\beta_{prop.am}am$
+
+* Intercept and coefficients estimated: `r coeff.Model.Step`
+* P-value intercept and coefficients:  `r pvalues.coff.model.Step` > 0.05 are bad p-value for the model.
+* p-value Model: `r pvalue.model.Step`. < 0.05 is a good p-value for the model.
+* R^2: `r r.model.Step`. This high value indicates that the model Step is a good fit to the data.
+
 Multivariable linear model formula:
 
-* $Y_i=\beta_1X_{1i}+\beta_2X_{2i}+...+\beta_pX_{pi}+\epsilon_i=\Sigma^p_{k=1}X_{ik}\beta_j+\epsilon_i$
+
 
 Model Complete: $mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}drat+\beta_{wt}wt+\beta_{qsec}qsec+\beta_{vs}vs+\beta_{am}am+\beta_{gear}gear+\beta_{carb}carb$
 
-```{r modelComplete, echo=TRUE}
-model.Complete <- lm(mpg ~ ., data=mtcars)
-beta.am.Complete <- coef(model.Complete)["am"]
-summary(model.Complete)
-```
+
+
+For complete model, it is the only that has a significative effect.
 
 > With this linear model we have a P-value over 0.05 on Intercept and all the coefficents, and under 0.05 for overall model.
 > $R^2$ is 0.869 for the model, this high value indicates that the model is a good fit to the data.
 
-> For linear regression model _Complete_, the expected difference in MPG is `r beta.am.Complete` when the car have manual transmission in comparation to the same car with automatic transmission.
+> For linear regression model _Complete_, the expected difference in MPG is `r ` when the car have manual transmission in comparation to the same car with automatic transmission.
 
 ```{r interactionsModelComplete, echo=TRUE}
 #Confidence Interval
@@ -119,48 +131,14 @@ sumCoef.Complete <- summary(model.Complete)$coef
 confInterval.Model.Complete <- sumCoef.Complete[9,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[9,2]
 ```
 
-Model to be proposed. Define a model based on Variation Inflation Factor analysis to check collinearity between variables:
 
-```{r vifAnalysis, echo=TRUE}
-library(car)
-vif.Complete <- vif(model.Complete)
-vif.Complete
-```
 
-VIF       | Indication
---------- | ----------
-1         | No correlation
-$1<VIF<5$ | moderate correlation
-$VIF>5$   | strong correlation
-
-Remove variables with strong correlation: `r colnames(vif.Complete[vif.Complete>5])`
-Use the other variables: `r colnames(vif.Complete[vif.Complete<5])`
-
-Proposed model: $mpg =\beta_{prop.hp}hp+\beta_{prop.drat}drat+\beta_{prop.vs}vs+\beta_{prop.am}am$
-
-```{r modelProp, echo=TRUE}
-model.Prop <- lm(formula = mpg ~ drat + vs + am, data = mtcars)
-beta.am.Prop <- coef(model.Prop)["am"]
-vif.Prop <- vif(model.Prop)
-sqrt(vif.Prop)
-summary(model.Prop)
-```
-Bad summary
-> For linear regression model _Prop_, the expected difference in MPG is `r beta.am.Prop` when the car have manual transmission in comparation to the same car with automatic transmission.
-
-Obtain a model by R function step:
-```{r modelStep, echo=TRUE}
-step(model.Complete, trace=FALSE)
-model.Step <- lm(formula = mpg ~ wt + qsec + am, data = mtcars)
-step(model.Complete, direction="forward", trace=FALSE)
-summary(model.Step)
-```
 
 Do a comparation between the 3 models
 
 ```{r comparationBetweenModels, echo=TRUE}
 library(car)
-anova(model.Initial, model.Prop, model.Step, model.Complete)
+anova(model.Initial, model.Step, model.Complete)
 ```
 
 
@@ -197,9 +175,9 @@ Residuals analysis:
 * $e_i$ can be thought of as estimates of the $\epsilon_i$.
 ```{r residualsModelInitial, echo=TRUE}
 #Calculate residuals
-e.ModelInitial <- y-(beta0+beta1*x)
-#R function for residuals: resid(model.Initial)
+e.ModelInitial <- resid(model.Initial)
 
+y <- mtcars$mpg
 #Calculate predicted y (mpg)
 yhat <- predict(model.Initial)
 #Calculate max difference between residual and observed Y - predicted Y (y hat)
@@ -265,8 +243,6 @@ Recall that: $(\hat{Y}_i-\bar{Y})=\hat\beta_1(X_i-\bar{X})$ so that
 #Calculate R2
 R2.Model.Initial <- sum((yhat - mean(y))^2)/sum((y-mean(y))^2)
 R2.Model.Initial
-#R function for R2
-cor(y,x)^2
 ```
 
 Inference in regression
@@ -275,21 +251,18 @@ Create confidence intervals and perform hypothesis tests.
 
 ```{r confIntervalsModelInitial,echo=TRUE}
 #Calculation of coefficients
-sigma <- var.e.Model.Initial
-ssx <- sum((x - mean(x))^2)
-seBeta0 <- (1/n + mean(x)^2/ssx) ^ 0.5 * sigma
-seBeta1 <- sigma / sqrt(ssx)
-tBeta0 <- beta0 / seBeta0
-tBeta1 <- beta1 / seBeta1
-pBeta0 <- 2 * pt(abs(tBeta0), df=n-2, lower.tail=FALSE)
-pBeta1 <- 2 * pt(abs(tBeta1), df=n-2, lower.tail=FALSE)
-coefTable <- rbind(c(beta0, seBeta0, tBeta0, pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
-colnames(coefTable) <- c("Estimate","Std.Error", "t value", "P(>|t|)")
-rownames(coefTable) <- c("(Intercept)", "x")
-coefTable
-
-#R function for calculate coefficients
-summary(model.Initial)$coef
+# sigma <- var.e.Model.Initial
+# ssx <- sum((x - mean(x))^2)
+# seBeta0 <- (1/n + mean(x)^2/ssx) ^ 0.5 * sigma
+# seBeta1 <- sigma / sqrt(ssx)
+# tBeta0 <- beta0 / seBeta0
+# tBeta1 <- beta1 / seBeta1
+# pBeta0 <- 2 * pt(abs(tBeta0), df=n-2, lower.tail=FALSE)
+# pBeta1 <- 2 * pt(abs(tBeta1), df=n-2, lower.tail=FALSE)
+# coefTable <- rbind(c(beta0, seBeta0, tBeta0, pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
+# colnames(coefTable) <- c("Estimate","Std.Error", "t value", "P(>|t|)")
+# rownames(coefTable) <- c("(Intercept)", "x")
+# coefTable
 ```
 
 ##Final Analysis
@@ -327,17 +300,28 @@ sumCoef.Step <- summary(model.Step)$coef
 confInterval.Model.Step <- sumCoef.Step[1,1] + c(-1,1) * qt(0.975, df=model.Step$df) * sumCoef.Step[1,2]
 ```
 
-```{r confidenceIntervalModelProp, echo=TRUE}
-sumCoef.Prop <- summary(model.Prop)$coef
-confInterval.Model.Prop <- sumCoef.Prop[1,1] + c(-1,1) * qt(0.975, df=model.Prop$df) * sumCoef.Prop[1,2]
-```
-
 > With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Step[1]` to `r confInterval.Model.Step[2]` increase in MPG comparing to use of automatic transmission for the Model Step.
 
 ***
 
 
 ##Main Body + Apendix only figures (not more than 5)
+
+_C1.Figure Summary Model Initial._
+```{r modelInitialPlot, echo=TRUE}
+summary(model.Initial)
+```
+
+_C2.Figure Summary Model Complete._
+```{r modelCompletePlot, echo=TRUE}
+summary(model.Complete)
+```
+
+_C3.Figure Summary Model Step._
+```{r modelStepPlot, echo=TRUE}
+summary(model.Step)
+```
+
 
 Figure :
 ```{r pairsMtcars}
@@ -371,6 +355,7 @@ labels=row.names(mtcars)
 
 Figure 3 Plot of residuals:
 ```{r plotResidual, echo=TRUE}
+x <- mtcars$am
 plot(x, resid(model.Initial))
 abline(h=0)
 plot(x, resid(model.Complete))
