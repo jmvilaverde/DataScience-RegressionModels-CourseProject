@@ -112,4 +112,11 @@ model.Incremental <- lm(mpg ~ . - disp - cyl - hp - wt - gear - vs, data = mtcar
 vif(model.Incremental)
 
 
+cor(mtcars)
 plot(mtcars)
+
+carb<- unique(mtcars$carb)
+unique(mtcars$carb)[order(unique(mtcars$carb))]
+class(mtcars$carb)
+
+summary(lm(formula = mpg ~ wt + qsec + am, data = mtcars))

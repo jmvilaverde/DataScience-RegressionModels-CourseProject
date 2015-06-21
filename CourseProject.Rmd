@@ -5,34 +5,9 @@ date: "Thursday, June 18, 2015"
 output: pdf_document
 ---
 
-##Question
-
-Take the mtcars data set and write up an analysis to answer their question using regression models and exploratory data analyses.
-
-Your report must be:
-
-Written as a PDF printout of a compiled (using knitr) R markdown document.
-Brief. Roughly the equivalent of 2 pages or less for the main text. Supporting figures in an appendix can be included up to 5 total pages including the 2 for the main report. The appendix can only include figures.
-Include a first paragraph executive summary.
-Upload your PDF by clicking the Upload button below the text box.
-
-#Evaluation/feedback on the above work
-
-* Did the student interpret the coefficients correctly?
-* Did the student do some exploratory data analyses?
-* Did the student fit multiple models and detail their strategy for model selection?
-* Did the student answer the questions of interest or detail why the question(s) is (are) not answerable?
-* Did the student do a residual plot and some diagnostics?
-* Did the student quantify the uncertainty in their conclusions and/or perform an inference correctly?
-* Was the report brief (about 2 pages long) for the main body of the report and no longer than 5 with supporting appendix of figures?
-* Did the report include an executive summary?
-* Was the report done in Rmd (knitr)?
-
-##Report brief (about 2 pages)
-
 ###Executive summary (First paragraph)
 
-Manual transmission is better for MPG...
+For all models evaluated that have a P-value Manual transmission is better for MPG...
 
 
 #### Data adquisition
@@ -41,6 +16,7 @@ Manual transmission is better for MPG...
 
 ##### 1.1. Variables
 
+
 ```{r dataAdquisition, echo=TRUE}
 data(mtcars)
 
@@ -48,23 +24,23 @@ data(mtcars)
 names(mtcars)
 ```
 
-**mtcars**
+**?mtcars**
 
 Format: _A data frame with 32 observations on 11 variables._
 
-Variable| Units
-------- | -----------
-**mpg** | **Miles/(US) gallon**
-cyl     | Number of cylinders
-disp    | Displacement (cu.in.)
-hp      | Gross horsepower
-drat    | Rear axle ratio
-wt      | Weight (lb/1000)
-qsec    | 1/4 mile time
-vs      | V/S -> V motor or straight motor
-**am**  | **Transmission (0 = automatic, 1 = manual)**
-gear    | Number of forward gears
-carb    | Number of carburetors
+Variable| Units                                         | Values
+------- | --------------------------------------------- | ---------------------------
+**mpg** | **Miles/(US) gallon**                         |
+cyl     | Number of cylinders (4,6,8)                   | `r unique(mtcars$cyl)[order(unique(mtcars$cyl))]`
+disp    | Displacement (cu.in.)                         |
+hp      | Gross horsepower                              |
+drat    | Rear axle ratio                               |
+wt      | Weight (lb/1000)                              |
+qsec    | 1/4 mile time                                 |
+vs      | V/S -> V motor or straight motor              | `r unique(mtcars$vs)[order(unique(mtcars$vs))]`
+**am**  | **Transmission (0 = automatic, 1 = manual)**  | `r unique(mtcars$am)[order(unique(mtcars$am))]`
+gear    | Number of forward gears                       | `r unique(mtcars$gear)[order(unique(mtcars$gear))]`
+carb    | Number of carburetors                         | `r unique(mtcars$carb)[order(unique(mtcars$carb))]`
 
 ```{r structureMtcars, echo=TRUE}
 #Show structure of mtcars
@@ -100,7 +76,7 @@ beta0 <- mean(y) - beta1 * mean(x)
 #R function
 model.Initial <- lm(mpg ~ am, data=mtcars)
 coeffs <- coef(model.Initial)
-
+summary(model.Initial)
 #Comparation
 rbind(c(beta0, beta1), coeffs)
 ```
@@ -109,6 +85,9 @@ For linear model $Y=\beta_0+\beta_1X$ -> $mpg=\beta_0+\beta_1am$
 
 * Intercept $\beta_0=$ `r beta0`
 * Slope $\beta_1=$ `r beta1`
+
+> With this linear model we have a P-value under 0.05 on Intercept and all the coefficents and overall model.
+> $R^2$ is 0.3598 for the model, this low value indicates that the model is not a good fit to the data.
 
 > For this linear regression model, the expected difference in MPG is `r beta1` when the car have manual transmission in comparation to the same car with automatic transmission.
 The Intercept `r beta0` is the expected MPG of a automatic transmission car.
@@ -126,16 +105,15 @@ Model Complete: $mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}d
 ```{r modelComplete, echo=TRUE}
 model.Complete <- lm(mpg ~ ., data=mtcars)
 beta.am.Complete <- coef(model.Complete)["am"]
-library(car)
+summary(model.Complete)
 ```
+
+> With this linear model we have a P-value over 0.05 on Intercept and all the coefficents, and under 0.05 for overall model.
+> $R^2$ is 0.869 for the model, this high value indicates that the model is a good fit to the data.
 
 > For linear regression model _Complete_, the expected difference in MPG is `r beta.am.Complete` when the car have manual transmission in comparation to the same car with automatic transmission.
 
 ```{r interactionsModelComplete, echo=TRUE}
-pairs(mtcars, panel = panel.smooth, main = "mtcars data", col=3+(mtcars$am>0))
-#Model Complete
-model.Complete <- lm(mpg ~ ., data = mtcars)
-summary(model.Complete)
 #Confidence Interval
 sumCoef.Complete <- summary(model.Complete)$coef
 confInterval.Model.Complete <- sumCoef.Complete[9,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[9,2]
@@ -144,6 +122,7 @@ confInterval.Model.Complete <- sumCoef.Complete[9,1] + c(-1,1) * qt(0.975, df=mo
 Model to be proposed. Define a model based on Variation Inflation Factor analysis to check collinearity between variables:
 
 ```{r vifAnalysis, echo=TRUE}
+library(car)
 vif.Complete <- vif(model.Complete)
 vif.Complete
 ```
@@ -166,14 +145,22 @@ vif.Prop <- vif(model.Prop)
 sqrt(vif.Prop)
 summary(model.Prop)
 ```
-
+Bad summary
 > For linear regression model _Prop_, the expected difference in MPG is `r beta.am.Prop` when the car have manual transmission in comparation to the same car with automatic transmission.
+
+Obtain a model by R function step:
+```{r modelStep, echo=TRUE}
+step(model.Complete, trace=FALSE)
+model.Step <- lm(formula = mpg ~ wt + qsec + am, data = mtcars)
+step(model.Complete, direction="forward", trace=FALSE)
+summary(model.Step)
+```
 
 Do a comparation between the 3 models
 
 ```{r comparationBetweenModels, echo=TRUE}
 library(car)
-anova(model.Initial, model.Prop, model.Complete)
+anova(model.Initial, model.Prop, model.Step, model.Complete)
 ```
 
 
@@ -181,30 +168,9 @@ anova(model.Initial, model.Prop, model.Complete)
 
 
 
-```{r plotModelInitial, echo=TRUE}
-plot(x=mtcars$am, y=mtcars$mpg,col=mtcars$am+1)
-legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
-abline(model.Initial, col="blue")
 
 
-with(mtcars, plot(x=wt + qsec + am, y=mtcars$mpg,col=mtcars$am+1))
-legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
-
-plot(cooks.distance(model.Complete), main="Cook's Distance for Mtcars")
-dfbetasPlots(model.Complete, main="Plot of Mtcars DFBETAS")
-
-#Dffits
-dffitsData.Complete <- as.data.frame(dffits(model.Complete))
-names(dffitsData.Complete) <- c("Observations")
-cutoff <- 2*sqrt(11/length(mtcars$mpg))
-plot(dffitsData.Complete$Observations, main="DFFITS Plot")
-abline(h=cutoff)
-abline(h=-cutoff)
-labels=row.names(mtcars)
-
-```
-
-_View Figure 1 for plot with regression line._
+_View Figure 2 for plot with regression line._
 
 ##### 3.Basic regression model with additive Gaussian errors.
 
@@ -232,9 +198,7 @@ Residuals analysis:
 ```{r residualsModelInitial, echo=TRUE}
 #Calculate residuals
 e.ModelInitial <- y-(beta0+beta1*x)
-e.ModelInitial
-#R function for residuals
-resid(model.Initial)
+#R function for residuals: resid(model.Initial)
 
 #Calculate predicted y (mpg)
 yhat <- predict(model.Initial)
@@ -242,12 +206,27 @@ yhat <- predict(model.Initial)
 max(abs(e.ModelInitial -(y - yhat)))
 ```
 
-Plot of residuals:
-```{r plotResidual, echo=TRUE}
-plot(x, resid(model.Initial))
-abline(h=0)
+```{r residualsModelComplete, echo=TRUE}
+#Calculate residuals
+e.ModelComplete <- resid(model.Complete)
+
+#Calculate predicted y (mpg)
+yhat <- predict(model.Complete)
+#Calculate max difference between residual and observed Y - predicted Y (y hat)
+max(abs(e.ModelComplete -(y - yhat)))
 ```
 
+```{r residualsModelStep, echo=TRUE}
+#Calculate residuals
+e.Model.Step <- resid(model.Step)
+
+#Calculate predicted y (mpg)
+yhat <- predict(model.Step)
+#Calculate max difference between residual and observed Y - predicted Y (y hat)
+max(abs(e.Model.Step -(y - yhat)))
+```
+
+Figure 3 Plot of residuals:
 
 Formula to estimate residual variation: 
 
@@ -313,66 +292,89 @@ coefTable
 summary(model.Initial)$coef
 ```
 
-Getting a confidence interval
+##Final Analysis
+
+### Is an automatic or manual transmission better for MPG?
+
+For model Initial, model Complete and model Step:
+
+> The manual transmission is better for MPG.
+
+### Quantify the MPG difference between automatic and manual transmissions.
+
+Model Initial:
+
 ```{r confidenceIntervalModelInitial, echo=TRUE}
 sumCoef <- summary(model.Initial)$coef
 confInterval.Model.Initial <- sumCoef[1,1] + c(-1,1) * qt(0.975, df=model.Initial$df) * sumCoef[1,2]
-confInterval.Model.Initial
 ```
+
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
+
+Model Complete:
 
 ```{r confidenceIntervalModelComplete, echo=TRUE}
 sumCoef.Complete <- summary(model.Complete)$coef
 confInterval.Model.Complete <- sumCoef.Complete[1,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[1,2]
-confInterval.Model.Complete
+```
+
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Complete[1]` to `r confInterval.Model.Complete[2]` increase in MPG comparing to use of automatic transmission for the Model Complete.
+
+Model Proposed:
+
+```{r confidenceIntervalModelStep, echo=TRUE}
+sumCoef.Step <- summary(model.Step)$coef
+confInterval.Model.Step <- sumCoef.Step[1,1] + c(-1,1) * qt(0.975, df=model.Step$df) * sumCoef.Step[1,2]
 ```
 
 ```{r confidenceIntervalModelProp, echo=TRUE}
 sumCoef.Prop <- summary(model.Prop)$coef
 confInterval.Model.Prop <- sumCoef.Prop[1,1] + c(-1,1) * qt(0.975, df=model.Prop$df) * sumCoef.Prop[1,2]
-confInterval.Model.Prop
 ```
 
-With 95% confidence, we estimate that a conversion from automatic transmission to manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG for the Initial Model.
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Step[1]` to `r confInterval.Model.Step[2]` increase in MPG comparing to use of automatic transmission for the Model Step.
 
-##Final Analysis for Model Initial
-
-_This analysis doesn't take in consideration other variables that MUST be evaluated due the influence on relation between MPG and the type of transmission AM. Is required a Multivariable regression model._
-
-### Is an automatic or manual transmission better for MPG?
-
-> The manual transmission is better for MPG.
-
-### Quantify the MPG difference between automatic and manual transmissions.
-
-> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
-
-> * Predictor:    X = am,  Transmission with values 0 for automatic, 1 for manual.
-> * Outcome:      Y = mpg, Miles/(US) gallon
-
-> Linear regression model formula: Y = ${\beta}_0 + {\beta}_1X$ -> mpg = ${\beta}_0 + {\beta}_1am$
-
-### Use of other models
-
-Conclussion for model complete
-
-### Is an automatic or manual transmission better for MPG?
-
-> The manual transmission is better for MPG.
-
-### Quantify the MPG difference between automatic and manual transmissions.
-
-> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Complete[1]` to `r confInterval.Model.Complete[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
-
-Conclussion for model proposed
-
-### Is an automatic or manual transmission better for MPG?
-
-> The manual transmission is better for MPG.
-
-### Quantify the MPG difference between automatic and manual transmissions.
-
-> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Prop[1]` to `r confInterval.Model.Prop[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
 ***
 
 
 ##Main Body + Apendix only figures (not more than 5)
+
+Figure :
+```{r pairsMtcars}
+pairs(mtcars, panel = panel.smooth, main = "mtcars data", col=3+(mtcars$am>0))
+```
+
+Figure 2:
+
+```{r plotModelInitial, echo=TRUE}
+plot(x=mtcars$am, y=mtcars$mpg,col=mtcars$am+1)
+legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
+abline(model.Initial, col="blue")
+
+
+with(mtcars, plot(x=wt + qsec + am, y=mtcars$mpg,col=mtcars$am+1))
+legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
+
+plot(cooks.distance(model.Complete), main="Cook's Distance for Mtcars")
+dfbetasPlots(model.Complete, main="Plot of Mtcars DFBETAS")
+
+#Dffits
+dffitsData.Complete <- as.data.frame(dffits(model.Complete))
+names(dffitsData.Complete) <- c("Observations")
+cutoff <- 2*sqrt(11/length(mtcars$mpg))
+plot(dffitsData.Complete$Observations, main="DFFITS Plot")
+abline(h=cutoff)
+abline(h=-cutoff)
+labels=row.names(mtcars)
+
+```
+
+Figure 3 Plot of residuals:
+```{r plotResidual, echo=TRUE}
+plot(x, resid(model.Initial))
+abline(h=0)
+plot(x, resid(model.Complete))
+abline(h=0)
+plot(x, resid(model.Step))
+abline(h=0)
+```
