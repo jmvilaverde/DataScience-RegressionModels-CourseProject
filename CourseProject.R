@@ -81,8 +81,35 @@ comparative <- function(model, exception, range){
         print(paste("Relevant to interact with ",exception," are these:",relevants))
 }
 
+step(lm(mpg~., data=mtcars))
+
+summary(lm(formula = mpg ~ wt + qsec + am, data = mtcars))
+
+with(mtcars, plot(mpg ~ .))
+
+library(car)
+model.Incremental <- lm(mpg ~ . - disp, data = mtcars)
+vif(model.Incremental)
+
+library(car)
+model.Incremental <- lm(mpg ~ . - disp - cyl - hp, data = mtcars)
+vif(model.Incremental)
+
+library(car)
+model.Incremental <- lm(mpg ~ . - disp - cyl - hp - wt, data = mtcars)
+vif(model.Incremental)
+
+library(car)
+model.Incremental <- lm(mpg ~ . - disp - cyl - hp - wt - gear, data = mtcars)
+vif(model.Incremental)
+
+library(car)
+model.Incremental <- lm(mpg ~ . - disp - cyl - hp - wt - gear - vs, data = mtcars)
+vif(model.Incremental)
+
+library(car)
+model.Incremental <- lm(mpg ~ . - disp - cyl - hp - wt - gear - vs, data = mtcars)
+vif(model.Incremental)
 
 
-
-
-
+plot(mtcars)

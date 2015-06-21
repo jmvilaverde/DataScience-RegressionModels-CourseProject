@@ -5,14 +5,6 @@ date: "Thursday, June 18, 2015"
 output: pdf_document
 ---
 
-##Context
-
-You work for Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). They are particularly interested in the following two questions:
-
-“Is an automatic or manual transmission better for MPG”
-"Quantify the MPG difference between automatic and manual transmissions"
-
-
 ##Question
 
 Take the mtcars data set and write up an analysis to answer their question using regression models and exploratory data analyses.
@@ -23,12 +15,6 @@ Written as a PDF printout of a compiled (using knitr) R markdown document.
 Brief. Roughly the equivalent of 2 pages or less for the main text. Supporting figures in an appendix can be included up to 5 total pages including the 2 for the main report. The appendix can only include figures.
 Include a first paragraph executive summary.
 Upload your PDF by clicking the Upload button below the text box.
-
-##Peer Grading
-
-The criteria that your classmates will use to evaluate and grade your work are shown below. 
-Each criteria is binary: (1 point = criteria met acceptably; 0 points = criteria not met acceptably)
-Your Course Project score will be the sum of the points and will count as 40% of your final grade in the course. 
 
 #Evaluation/feedback on the above work
 
@@ -46,7 +32,7 @@ Your Course Project score will be the sum of the points and will count as 40% of
 
 ###Executive summary (First paragraph)
 
-Automatic/Manual transmission is better...
+Manual transmission is better for MPG...
 
 
 #### Data adquisition
@@ -57,8 +43,6 @@ Automatic/Manual transmission is better...
 
 ```{r dataAdquisition, echo=TRUE}
 data(mtcars)
-        
-#?mtcars
 
 #Show colnames of mtcars
 names(mtcars)
@@ -77,7 +61,7 @@ hp      | Gross horsepower
 drat    | Rear axle ratio
 wt      | Weight (lb/1000)
 qsec    | 1/4 mile time
-vs      | V/S
+vs      | V/S -> V motor or straight motor
 **am**  | **Transmission (0 = automatic, 1 = manual)**
 gear    | Number of forward gears
 carb    | Number of carburetors
@@ -88,25 +72,23 @@ str(mtcars)
 ```
 
 
-##### 2.Initial analysis
+### 2.Initial analysis
+
+#### One predictor
+
 Selected variables: 
 
 * Predictor:    X = am,  Transmission with values 0 for automatic, 1 for manual.
 * Outcome:      Y = mpg, Miles/(US) gallon
 
-Linear regression model formula:
-
-* Y = ${\beta}_0 + {\beta}_1X$ -> mpg = ${\beta}_0 + {\beta}_1am$
+Linear regression model formula: Y = ${\beta}_0 + {\beta}_1X$ -> mpg = ${\beta}_0 + {\beta}_1am$
 
 Create initial model:
 
-Calculate $\beta_0$ (Intercept): $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$
+* Calculate $\beta_0$ (Intercept): $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$
+* Calculate $\beta_1$ (Slope): $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$
 
-Calculate $\beta_1$ (Slope): $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$
-
-Fitting the best line:
-
-* $\Sigma_{n}^{i=1}{(Y_i-(\beta_0+\beta_1X_i))}^2$ to minimize the distance.
+Fitting the best line: $\Sigma_{n}^{i=1}{(Y_i-(\beta_0+\beta_1X_i))}^2$ to minimize the distance.
 
 ```{r teoreticalFormula, echo=TRUE}
 #Theoretical formula
@@ -114,8 +96,9 @@ y <- mtcars$mpg
 x <- mtcars$am
 beta1 <- cor(y,x)*(sd(y)/sd(x))
 beta0 <- mean(y) - beta1 * mean(x)
+
 #R function
-model.Initial <- lm(y ~ x)
+model.Initial <- lm(mpg ~ am, data=mtcars)
 coeffs <- coef(model.Initial)
 
 #Comparation
@@ -130,16 +113,98 @@ For linear model $Y=\beta_0+\beta_1X$ -> $mpg=\beta_0+\beta_1am$
 > For this linear regression model, the expected difference in MPG is `r beta1` when the car have manual transmission in comparation to the same car with automatic transmission.
 The Intercept `r beta0` is the expected MPG of a automatic transmission car.
 
+#### Multiple predictor
+
+In multivariable regression analysis you must evaluate the consecuences to throwing variables that aren't related to the outcome and consecuences to omitting variables that are related to the outcome.
+
+Multivariable linear model formula:
+
+* $Y_i=\beta_1X_{1i}+\beta_2X_{2i}+...+\beta_pX_{pi}+\epsilon_i=\Sigma^p_{k=1}X_{ik}\beta_j+\epsilon_i$
+
+Model Complete: $mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}drat+\beta_{wt}wt+\beta_{qsec}qsec+\beta_{vs}vs+\beta_{am}am+\beta_{gear}gear+\beta_{carb}carb$
+
+```{r modelComplete, echo=TRUE}
+model.Complete <- lm(mpg ~ ., data=mtcars)
+beta.am.Complete <- coef(model.Complete)["am"]
+library(car)
+```
+
+> For linear regression model _Complete_, the expected difference in MPG is `r beta.am.Complete` when the car have manual transmission in comparation to the same car with automatic transmission.
+
+```{r interactionsModelComplete, echo=TRUE}
+pairs(mtcars, panel = panel.smooth, main = "mtcars data", col=3+(mtcars$am>0))
+#Model Complete
+model.Complete <- lm(mpg ~ ., data = mtcars)
+summary(model.Complete)
+#Confidence Interval
+sumCoef.Complete <- summary(model.Complete)$coef
+confInterval.Model.Complete <- sumCoef.Complete[9,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[9,2]
+```
+
+Model to be proposed. Define a model based on Variation Inflation Factor analysis to check collinearity between variables:
+
+```{r vifAnalysis, echo=TRUE}
+vif.Complete <- vif(model.Complete)
+vif.Complete
+```
+
+VIF       | Indication
+--------- | ----------
+1         | No correlation
+$1<VIF<5$ | moderate correlation
+$VIF>5$   | strong correlation
+
+Remove variables with strong correlation: `r colnames(vif.Complete[vif.Complete>5])`
+Use the other variables: `r colnames(vif.Complete[vif.Complete<5])`
+
+Proposed model: $mpg =\beta_{prop.hp}hp+\beta_{prop.drat}drat+\beta_{prop.vs}vs+\beta_{prop.am}am$
+
+```{r modelProp, echo=TRUE}
+model.Prop <- lm(formula = mpg ~ drat + vs + am, data = mtcars)
+beta.am.Prop <- coef(model.Prop)["am"]
+vif.Prop <- vif(model.Prop)
+sqrt(vif.Prop)
+summary(model.Prop)
+```
+
+> For linear regression model _Prop_, the expected difference in MPG is `r beta.am.Prop` when the car have manual transmission in comparation to the same car with automatic transmission.
+
+Do a comparation between the 3 models
+
+```{r comparationBetweenModels, echo=TRUE}
+library(car)
+anova(model.Initial, model.Prop, model.Complete)
+```
+
+
+
+
+
+
 ```{r plotModelInitial, echo=TRUE}
-color <- ifelse(x==0,"red","blue")
-plot(x,y,col=color,xlab="x=am",ylab="y=mpg")
-legend("top",c("Automatic","Manual"),col=c("red","blue"),pch=1)
-abline(model.Initial)
+plot(x=mtcars$am, y=mtcars$mpg,col=mtcars$am+1)
+legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
+abline(model.Initial, col="blue")
+
+
+with(mtcars, plot(x=wt + qsec + am, y=mtcars$mpg,col=mtcars$am+1))
+legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
+
+plot(cooks.distance(model.Complete), main="Cook's Distance for Mtcars")
+dfbetasPlots(model.Complete, main="Plot of Mtcars DFBETAS")
+
+#Dffits
+dffitsData.Complete <- as.data.frame(dffits(model.Complete))
+names(dffitsData.Complete) <- c("Observations")
+cutoff <- 2*sqrt(11/length(mtcars$mpg))
+plot(dffitsData.Complete$Observations, main="DFFITS Plot")
+abline(h=cutoff)
+abline(h=-cutoff)
+labels=row.names(mtcars)
+
 ```
 
 _View Figure 1 for plot with regression line._
-
-###Normalizing data????
 
 ##### 3.Basic regression model with additive Gaussian errors.
 
@@ -255,6 +320,18 @@ confInterval.Model.Initial <- sumCoef[1,1] + c(-1,1) * qt(0.975, df=model.Initia
 confInterval.Model.Initial
 ```
 
+```{r confidenceIntervalModelComplete, echo=TRUE}
+sumCoef.Complete <- summary(model.Complete)$coef
+confInterval.Model.Complete <- sumCoef.Complete[1,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[1,2]
+confInterval.Model.Complete
+```
+
+```{r confidenceIntervalModelProp, echo=TRUE}
+sumCoef.Prop <- summary(model.Prop)$coef
+confInterval.Model.Prop <- sumCoef.Prop[1,1] + c(-1,1) * qt(0.975, df=model.Prop$df) * sumCoef.Prop[1,2]
+confInterval.Model.Prop
+```
+
 With 95% confidence, we estimate that a conversion from automatic transmission to manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG for the Initial Model.
 
 ##Final Analysis for Model Initial
@@ -276,18 +353,26 @@ _This analysis doesn't take in consideration other variables that MUST be evalua
 
 ### Use of other models
 
-This model lacks of ?precission?. is required to use aditional variables from the original dataset.
+Conclussion for model complete
 
-For this, is needed the use of multivariable regression analyses.
+### Is an automatic or manual transmission better for MPG?
 
+> The manual transmission is better for MPG.
 
+### Quantify the MPG difference between automatic and manual transmissions.
 
-###“Is an automatic or manual transmission better for MPG”
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Complete[1]` to `r confInterval.Model.Complete[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
 
+Conclussion for model proposed
+
+### Is an automatic or manual transmission better for MPG?
+
+> The manual transmission is better for MPG.
+
+### Quantify the MPG difference between automatic and manual transmissions.
+
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Prop[1]` to `r confInterval.Model.Prop[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
 ***
-
-# Muliiable regression models
-
 
 
 ##Main Body + Apendix only figures (not more than 5)
