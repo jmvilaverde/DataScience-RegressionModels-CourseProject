@@ -116,21 +116,21 @@ _(View Figure C4. Anova comparation between the models.)_
 > With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Step[1]` to `r confInterval.Model.Step[2]` increase in MPG comparing to use of automatic transmission for a car with the same weight (wt) and 1/4 mile time (qsec).
 
 ***
+## Apendix. (Note: Summary and Anova are included as Figures).
 
-## Apendix. 
-
-_Note: (Please, take in consideration Summary of models as figures)._
-
-```{r pairsMtcars, echo=FALSE, fig.height=10, fig.width=10}
+```{r pairsMtcars, echo=FALSE, fig.height=5.5, fig.width=7}
 pairs(mtcars, panel = panel.smooth, main = "Figure 1. Mtcars pairs comparation.", col=3+(mtcars$am>0))
 ```
+```{r plotModelA, echo=FALSE, fig.height=3, fig.width=7, fig.align='center'}
+par(mfrow=c(1,2))
+plot(model.Step,col=mtcars$am+1, qqline=TRUE, which=1:2)
+title("Figure 2.Model Step Plot.", outer=TRUE, font.main=2, line=-1)
+```
 
-_Figure 2.Model Step Plot._
-
-```{r plotModel, echo=FALSE, fig.height=5.5, fig.width=5.5, fig.align='center'}
-par(mfrow=c(2,2))
-plot(model.Step,col=mtcars$am+1, qqline=TRUE)
-title("Figure 2.Model Step Plot.")
+```{r plotModelB, echo=FALSE, fig.height=3, fig.width=7, fig.align='center'}
+par(mfrow=c(1,2))
+plot(model.Step,col=mtcars$am+1, qqline=TRUE, which=3:4)
+title("Figure 2.Model Step Plot.", outer=TRUE, font.main=2, line=-1)
 ```
 
 _Figure C1.Figure Summary Model Initial._
@@ -152,4 +152,3 @@ _Figure C4. Anova comparation between the models._
 ```{r anova, echo=FALSE}
 anova(model.Initial, model.Step, model.Complete)
 ```
-
