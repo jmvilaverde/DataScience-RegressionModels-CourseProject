@@ -4,10 +4,9 @@ author: "by jmvilaverde"
 date: "Thursday, June 18, 2015"
 output: pdf_document
 ---
+## Executive summary
 
-## Executive summary (First paragraph)
-
-For all models evaluated that have a P-value < 0.05 Manual transmission is better for MPG...
+With the linear regression model evaluated have concluded that, with 95% confidence, is estimated that a manual transmission results in a 0.0457303 to 5.8259441 increase in MPG comparing to use an automatic transmission.
 
 ***
 
@@ -17,9 +16,9 @@ For all models evaluated that have a P-value < 0.05 Manual transmission is bette
 data(mtcars)
 ```
 
-### **Structure from ?mtcars and values for factors**
+### **Structure from ?mtcars and values for factors.** _(View Figure 1.Mtcars pairs comparation.)_
 
-Format: _A data frame with 32 observations on 11 variables._
+*Format:* _A data frame with 32 observations on 11 variables._
 
 Variables | Units                                         | Values
 --------- | --------------------------------------------- | ---------------------------
@@ -37,329 +36,120 @@ carb      | Number of carburetors                         | `r unique(mtcars$car
 
 Correlation between mpg and am is `r cor(mtcars$mpg, mtcars$am)`. (Closer to -1 or 1 is stronger relationship, when is 0 implies no linear relationship).
 
-### 2.Model proposal and analysis
+## 2.Model proposal and analysis
 
-#### First comparation, model with one predictor vs. multivariable
+### 2.1.Analysis of Model Initial. _(View Figure C1.Figure Summary Model Initial.)_
 
-Linear regression model formula: 
+> $mpg_i={\beta}_0+\beta_{am}am_i$
 
-One predictor | $Y_i={\beta}_0+{\beta}_1X_i$                 | Model Initial
-------------- | -------------------------------------------- | ---------------
-Multivariable | $Y_i=\Sigma^p_{k=1}X_{ik}\beta_j+\epsilon_i$ | Model Complete
-
-In multivariable regression analysis you must evaluate the consecuences to throwing variables that aren't related to the outcome and consecuences to omitting variables that are related to the outcome.
-
-##### Analysis of Model Initial: 
-
-$mpg_i={\beta}_0+\beta_{am}am_i$
-
-_View Figure C1.Summary Detail Model Initial._
 ```{r modelInitial, echo=FALSE}
 model.Initial <- lm(mpg ~ am, data=mtcars)
-summary(model.Initial)
 coeff.Model.Initial <- coef(model.Initial)
-pvalue.model.Initial <- as.character(anova(model.Initial)$'Pr(>F)'[1])
-pvalues.coff.model.Initial <- as.character(summary(model.Initial)$coefficients[,4])
+pvalue.model.Initial <- as.character(format(anova(model.Initial)$'Pr(>F)'[1],scientific=TRUE))
+pvalues.coff.model.Initial <- as.character(format(summary(model.Initial)$coefficients[,4],scientific=TRUE))
 r.model.Initial <- summary(model.Initial)$r.squared
 ```
 
-* Intercept and coefficients estimated: `r coeff.Model.Initial`
-* P-value intercept and coefficients:  `r pvalues.coff.model.Initial` < 0.05 are good p-value for the model.
-* p-value Model: `r pvalue.model.Initial`. < 0.05 is a good p-value for the model.
-* $R^2$: `r r.model.Initial`. **This low value indicates that model Initial is not a good fit for the data.**
+* P-value intercept and coefficients:  `r pvalues.coff.model.Initial` < 0.05 are good p-values.
+* P-value Model: `r pvalue.model.Initial`. < 0.05 is a good p-value for the model.
+* $R^2$ value: `r r.model.Initial`. **This low value indicates that model Initial only fits 36% of the data.**
 
-##### Analysis of model Complete:
+#### 2.2.Analysis of model Complete. _(View Figure C2.Figure Summary Model Complete.)_
 
-$mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}drat+\beta_{wt}wt+\beta_{qsec}qsec+\beta_{vs}vs+\beta_{am}am+\beta_{gear}gear+\beta_{carb}car$
+> $mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}drat+\beta_{wt}wt+\beta_{qsec}qsec+\beta_{vs}vs+\beta_{am}am+\beta_{gear}gear+\beta_{carb}carb$
 
-_View Figure C1.Summary Detail Model Initial._
 ```{r modelComplete, echo=FALSE}
 model.Complete <- lm(mpg ~ ., data=mtcars)
-summary(model.Complete)
 coeff.Model.Complete <- coef(model.Complete)
-pvalue.model.Complete <- as.character(anova(model.Complete)$'Pr(>F)'[1])
-pvalues.coff.model.Complete <- as.character(summary(model.Complete)$coefficients[,4])
+pvalue.model.Complete <- as.character(format(anova(model.Complete)$'Pr(>F)'[1],scientific=TRUE))
+pvalues.coff.model.Complete <- as.character(format(summary(model.Complete)$coefficients[,4],scientific=TRUE))
 r.model.Complete <- summary(model.Complete)$r.squared
 ```
 
-* Intercept and coefficients estimated: `r coeff.Model.Complete`
-* P-value intercept and coefficients:  `r pvalues.coff.model.Complete` > 0.05 are bad p-value for the model.
-* p-value Model: `r pvalue.model.Complete`. < 0.05 is a good p-value for the model.
-* R^2: `r r.model.Complete`. This high value indicates that the model Complete is a good fit to the data.
+* P-value intercept and coefficients:  `r pvalues.coff.model.Complete` > 0.05 are bad p-values.
+* P-value Model: `r pvalue.model.Complete`. < 0.05 is a good p-value for the model.
+* $R^2$ value: `r r.model.Complete`. This high value indicates that the model Complete is a good fit to the data.
 
-**The p-value for intercept and coefficients indicates that model Complete is not a good model for the data.**
+**The p-value for intercept and coefficients indicates that model Complete is not a good model for fit the data.**
 
-Find a better model using step function:
+#### 2.3.Propose and analysis of alternative model using step R function. _(View Figure C3.Figure Summary Model Step.)_
 
 ```{r modelStep, echo=FALSE}
 step.result <- as.character(step(model.Complete, trace=FALSE)$call)
 model.Step <- lm(mpg ~ wt + qsec + am, data=mtcars)
-summary(model.Step)
 coeff.Model.Step <- coef(model.Step)
-pvalue.model.Step <- as.character(anova(model.Step)$'Pr(>F)'[1])
-pvalues.coff.model.Step <- as.character(summary(model.Step)$coefficients[,4])
+pvalue.model.Step <- as.character(format(anova(model.Step)$'Pr(>F)'[1],scientific=TRUE))
+pvalues.coff.model.Step <- as.character(format(summary(model.Step)$coefficients[,4],scientific=TRUE))
 r.model.Step <- summary(model.Step)$r.squared
 ```
 
-* step(lm(mpg ~ ., data=mtcars)): `r step.result`
+> step(lm(mpg ~ ., data=mtcars)): `r step.result`
 
-Step model: $mpg =\beta_{prop.wt}wt+\beta_{prop.qsec}qsec+\beta_{prop.am}am$
+> $mpg =\beta_{wt}wt+\beta_{qsec}qsec+\beta_{am}am$
 
-* Intercept and coefficients estimated: `r coeff.Model.Step`
-* P-value intercept and coefficients:  `r pvalues.coff.model.Step` > 0.05 are bad p-value for the model.
+* P-value intercept and coefficients:  `r pvalues.coff.model.Step` < 0.05 for coefficients are good p-value for the model.
 * p-value Model: `r pvalue.model.Step`. < 0.05 is a good p-value for the model.
-* R^2: `r r.model.Step`. This high value indicates that the model Step is a good fit to the data.
+* R^2: `r r.model.Step`. This high value indicates that the model Step is a good fit to the data.(1 means 100% fit).
 
-Multivariable linear model formula:
+*This model have a p-value < 0.05 for model and coefficients, and a $R^2$ value near 85%. This model is accepted.*
 
-
-
-Model Complete: $mpg =\beta_{cyl}cyl+\beta_{dips}disp+\beta_{hp}hp+\beta_{drat}drat+\beta_{wt}wt+\beta_{qsec}qsec+\beta_{vs}vs+\beta_{am}am+\beta_{gear}gear+\beta_{carb}carb$
-
-
-
-For complete model, it is the only that has a significative effect.
-
-> With this linear model we have a P-value over 0.05 on Intercept and all the coefficents, and under 0.05 for overall model.
-> $R^2$ is 0.869 for the model, this high value indicates that the model is a good fit to the data.
-
-> For linear regression model _Complete_, the expected difference in MPG is `r ` when the car have manual transmission in comparation to the same car with automatic transmission.
-
-```{r interactionsModelComplete, echo=TRUE}
+```{r interactionsModelStep, echo=FALSE}
 #Confidence Interval
-sumCoef.Complete <- summary(model.Complete)$coef
-confInterval.Model.Complete <- sumCoef.Complete[9,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[9,2]
-```
-
-
-
-
-Do a comparation between the 3 models
-
-```{r comparationBetweenModels, echo=TRUE}
-library(car)
-anova(model.Initial, model.Step, model.Complete)
-```
-
-
-
-
-
-
-
-
-_View Figure 2 for plot with regression line._
-
-##### 3.Basic regression model with additive Gaussian errors.
-
-Into point 2 is obtained a linear regression model that fits the data, but doesn't take in consideration the impact of the others variables. We are going to analyze gaussian errors for Initial Model.
-
-Selected variables: 
-
-* **Predictor**:    X = am,  Transmission with values 0 for automatic, 1 for manual.
-* **Outcome**:      Y = mpg, Miles/(US) gallon
-
-Probabilistic model for linear regression:
-
-* $Y_i={\beta}_0+{\beta}_1X_i+\epsilon_i$ -> $mpg_i={\beta}_0+{\beta}_1am_i+\epsilon_i$
-* $\epsilon_i$ are assumed iid $N(\mu_i,\sigma^2)$. 
-* Note, $E[Y_i|X_i=x_i]=\mu_i=\beta_0+\beta_1x_i$ and $Var(Y_i|X_i=x_i)=\sigma^2$.
-* $\hat{\beta}_0=\bar{Y}+\hat{\beta}_1 \bar{X}$ and $\hat{\beta}_1= Cor(Y,X)\frac{Sd(Y)}{Sd(X)}$.
-
-Residuals analysis:
-
-* Observed outcome i is $Y_i$ at a predictor value $X_i$.
-* Predicted outcome i is $\hat{Y}_i$ at a predictor value $X_i$ is $\hat{Y}_i=\hat{\beta}_0+\hat{\beta}_1X_i$.
-* Residual is the difference between observed an predicted: $e_i=Y_i-\hat{Y}$, the vertical distance between the observed data point and the regression line.
-* Least squares minimizes $\Sigma_{i=1}^ne_i^2$.
-* $e_i$ can be thought of as estimates of the $\epsilon_i$.
-```{r residualsModelInitial, echo=TRUE}
-#Calculate residuals
-e.ModelInitial <- resid(model.Initial)
-
-y <- mtcars$mpg
-#Calculate predicted y (mpg)
-yhat <- predict(model.Initial)
-#Calculate max difference between residual and observed Y - predicted Y (y hat)
-max(abs(e.ModelInitial -(y - yhat)))
-```
-
-```{r residualsModelComplete, echo=TRUE}
-#Calculate residuals
-e.ModelComplete <- resid(model.Complete)
-
-#Calculate predicted y (mpg)
-yhat <- predict(model.Complete)
-#Calculate max difference between residual and observed Y - predicted Y (y hat)
-max(abs(e.ModelComplete -(y - yhat)))
-```
-
-```{r residualsModelStep, echo=TRUE}
-#Calculate residuals
-e.Model.Step <- resid(model.Step)
-
-#Calculate predicted y (mpg)
-yhat <- predict(model.Step)
-#Calculate max difference between residual and observed Y - predicted Y (y hat)
-max(abs(e.Model.Step -(y - yhat)))
-```
-
-Figure 3 Plot of residuals:
-
-Formula to estimate residual variation: 
-
-* ML estimate of $\sigma^2$ is $\frac{1}{n}\Sigma^n_{i=1}e^2_i$
-* For $E[\hat\sigma^2]=\sigma^2$ most people use $\frac{1}{n-2}\Sigma^n_{i=1}e^2_i$
-
-```{r residualVariationModelInitial, echo=TRUE}
-#Calculate variation
-n <- length(y)
-var.e.Model.Initial <- sqrt((1/(n-2))*sum((e.ModelInitial^2)))
-var.e.Model.Initial
-#R function to calculate residual variation
-summary(model.Initial)$sigma
-```
-
-Model Initial has a residual variation of `r var.e.Model.Initial`.
-
-#### Total variation.
-
-Formula Total variation = Residual variation + Regression Variation:
-
-* $\Sigma^n_{i=1}(Y_i-\bar{Y})^2=\Sigma^n_{i=1}(Y_i-\hat{Y}_i)^2+\Sigma^n_{i=1}(\hat{Y}_i-\bar{Y})^2$
-
-Define the percent of total variation described by the model as:
-
-* $R^2=\frac{\Sigma^n_{i=1}(\hat{Y}_i-\bar{Y})^2}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}=1-\frac{\Sigma^n_{i=1}(Y_i-\hat{Y}_i)^2}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}$
-
-Relation between $R^2$ and r (the correlation):
-
-Recall that: $(\hat{Y}_i-\bar{Y})=\hat\beta_1(X_i-\bar{X})$ so that
-
-* $R^2=\frac{\Sigma^n_{i=1}(\hat{Y}_i-\bar{Y})^2}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}=\hat\beta^2_1\frac{\Sigma^n_{i=1}(X_i-\bar{X})}{\Sigma^n_{i=1}(Y_i-\bar{Y})^2}=Cor(Y,X)^2$
-
-
-```{r rModelInitial, echo=TRUE}
-#Calculate R2
-R2.Model.Initial <- sum((yhat - mean(y))^2)/sum((y-mean(y))^2)
-R2.Model.Initial
-```
-
-Inference in regression
-
-Create confidence intervals and perform hypothesis tests.
-
-```{r confIntervalsModelInitial,echo=TRUE}
-#Calculation of coefficients
-# sigma <- var.e.Model.Initial
-# ssx <- sum((x - mean(x))^2)
-# seBeta0 <- (1/n + mean(x)^2/ssx) ^ 0.5 * sigma
-# seBeta1 <- sigma / sqrt(ssx)
-# tBeta0 <- beta0 / seBeta0
-# tBeta1 <- beta1 / seBeta1
-# pBeta0 <- 2 * pt(abs(tBeta0), df=n-2, lower.tail=FALSE)
-# pBeta1 <- 2 * pt(abs(tBeta1), df=n-2, lower.tail=FALSE)
-# coefTable <- rbind(c(beta0, seBeta0, tBeta0, pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
-# colnames(coefTable) <- c("Estimate","Std.Error", "t value", "P(>|t|)")
-# rownames(coefTable) <- c("(Intercept)", "x")
-# coefTable
-```
-
-##Final Analysis
-
-### Is an automatic or manual transmission better for MPG?
-
-For model Initial, model Complete and model Step:
-
-> The manual transmission is better for MPG.
-
-### Quantify the MPG difference between automatic and manual transmissions.
-
-Model Initial:
-
-```{r confidenceIntervalModelInitial, echo=TRUE}
-sumCoef <- summary(model.Initial)$coef
-confInterval.Model.Initial <- sumCoef[1,1] + c(-1,1) * qt(0.975, df=model.Initial$df) * sumCoef[1,2]
-```
-
-> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Initial[1]` to `r confInterval.Model.Initial[2]` increase in MPG comparing to use of automatic transmission for the Model Initial.
-
-Model Complete:
-
-```{r confidenceIntervalModelComplete, echo=TRUE}
-sumCoef.Complete <- summary(model.Complete)$coef
-confInterval.Model.Complete <- sumCoef.Complete[1,1] + c(-1,1) * qt(0.975, df=model.Complete$df) * sumCoef.Complete[1,2]
-```
-
-> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Complete[1]` to `r confInterval.Model.Complete[2]` increase in MPG comparing to use of automatic transmission for the Model Complete.
-
-Model Proposed:
-
-```{r confidenceIntervalModelStep, echo=TRUE}
 sumCoef.Step <- summary(model.Step)$coef
-confInterval.Model.Step <- sumCoef.Step[1,1] + c(-1,1) * qt(0.975, df=model.Step$df) * sumCoef.Step[1,2]
+confInterval.Model.Step <- sumCoef.Step[4,1] + c(-1,1) * qt(0.975, df=model.Step$df) * sumCoef.Step[4,2]
 ```
 
-> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Step[1]` to `r confInterval.Model.Step[2]` increase in MPG comparing to use of automatic transmission for the Model Step.
+_(View Figure 2. Model Step plot.)_
+
+_(View Figure C4. Anova comparation between the models.)_
 
 ***
 
+##Final Analysis based on information from Model Step.
 
-##Main Body + Apendix only figures (not more than 5)
+### Is an automatic or manual transmission better for MPG?
 
-_C1.Figure Summary Model Initial._
-```{r modelInitialPlot, echo=TRUE}
+> The manual transmission mean is higher than automatic transmission mean for Model Step, due to this analysis is determined that manual transmission is better for MPG.
+
+### Quantify the MPG difference between automatic and manual transmissions.
+
+> With 95% confidence, we estimate that a manual transmission results in a `r confInterval.Model.Step[1]` to `r confInterval.Model.Step[2]` increase in MPG comparing to use of automatic transmission for a car with the same weight (wt) and 1/4 mile time (qsec).
+
+***
+
+## Apendix. 
+
+_Note: (Please, take in consideration Summary of models as figures)._
+
+```{r pairsMtcars, echo=FALSE, fig.height=10, fig.width=10}
+pairs(mtcars, panel = panel.smooth, main = "Figure 1. Mtcars pairs comparation.", col=3+(mtcars$am>0))
+```
+
+_Figure 2.Model Step Plot._
+
+```{r plotModel, echo=FALSE, fig.height=5.5, fig.width=5.5, fig.align='center'}
+par(mfrow=c(2,2))
+plot(model.Step,col=mtcars$am+1, qqline=TRUE)
+title("Figure 2.Model Step Plot.")
+```
+
+_Figure C1.Figure Summary Model Initial._
+```{r modelInitialPlot, echo=FALSE}
 summary(model.Initial)
 ```
 
-_C2.Figure Summary Model Complete._
-```{r modelCompletePlot, echo=TRUE}
+_Figure C2.Figure Summary Model Complete._
+```{r modelCompletePlot, echo=FALSE}
 summary(model.Complete)
 ```
 
-_C3.Figure Summary Model Step._
-```{r modelStepPlot, echo=TRUE}
+_Figure C3.Figure Summary Model Step._
+```{r modelStepPlot, echo=FALSE}
 summary(model.Step)
 ```
 
-
-Figure :
-```{r pairsMtcars}
-pairs(mtcars, panel = panel.smooth, main = "mtcars data", col=3+(mtcars$am>0))
+_Figure C4. Anova comparation between the models._
+```{r anova, echo=FALSE}
+anova(model.Initial, model.Step, model.Complete)
 ```
 
-Figure 2:
-
-```{r plotModelInitial, echo=TRUE}
-plot(x=mtcars$am, y=mtcars$mpg,col=mtcars$am+1)
-legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
-abline(model.Initial, col="blue")
-
-
-with(mtcars, plot(x=wt + qsec + am, y=mtcars$mpg,col=mtcars$am+1))
-legend("top",c("Automatic","Manual"),col=c(1,2),pch=1)
-
-plot(cooks.distance(model.Complete), main="Cook's Distance for Mtcars")
-dfbetasPlots(model.Complete, main="Plot of Mtcars DFBETAS")
-
-#Dffits
-dffitsData.Complete <- as.data.frame(dffits(model.Complete))
-names(dffitsData.Complete) <- c("Observations")
-cutoff <- 2*sqrt(11/length(mtcars$mpg))
-plot(dffitsData.Complete$Observations, main="DFFITS Plot")
-abline(h=cutoff)
-abline(h=-cutoff)
-labels=row.names(mtcars)
-
-```
-
-Figure 3 Plot of residuals:
-```{r plotResidual, echo=TRUE}
-x <- mtcars$am
-plot(x, resid(model.Initial))
-abline(h=0)
-plot(x, resid(model.Complete))
-abline(h=0)
-plot(x, resid(model.Step))
-abline(h=0)
-```
